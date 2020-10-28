@@ -17,12 +17,25 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.project.DumbAwareAction
+import com.intellij.openapi.ui.DialogWrapper
 
 class EnableAction : DumbAwareAction() {
 
   override fun actionPerformed(e: AnActionEvent) {
-    ProjectorService.enable()
+    val project = PlatformDataKeys.PROJECT.getData(e.dataContext)
+    val dialog = ConnectionDialog(project)
+    dialog.pack()
+    dialog.show()
+
+    if (dialog.exitCode == DialogWrapper.OK_EXIT_CODE) {
+      val session = Session(dialog.host.selectedItem as String,
+                            dialog.port.text,
+                            dialog.tokenRW.text,
+                            dialog.tokenRO.text)
+      session.start()
+    }
   }
 
   override fun update(e: AnActionEvent) {

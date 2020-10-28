@@ -43,6 +43,7 @@ object ProjectorService {
   private val logger = Logger.getInstance(ProjectorService::class.java)
   private val plugin = PluginManager.getPlugin(PluginId.getId("org.jetbrains.projector-plugin"))!!
 
+  var currentSession: Session? = null
   var enabled: EnabledState = when (areRequiredVmOptionsPresented()) {
     true -> EnabledState.HAS_VM_OPTIONS_AND_DISABLED
     false -> EnabledState.NO_VM_OPTIONS_AND_DISABLED

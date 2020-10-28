@@ -18,46 +18,43 @@
  */
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.DumbAwareAction
-import java.awt.Toolkit
-import java.awt.datatransfer.StringSelection
-import java.net.Inet4Address
-import java.net.NetworkInterface
+import org.jetbrains.projector.server.ProjectorServer
+import javax.swing.JOptionPane
 
 class CopyUrlAction : DumbAwareAction() {
 
   override fun actionPerformed(e: AnActionEvent) {
-    val dockerVendor = byteArrayOf(0x02.toByte(), 0x42.toByte())
+    val option = JOptionPane.showOptionDialog(
+      null,
+      "Copy the link depending on the type of access you want to grant.",
+      "Copy Invitation Link",
+      JOptionPane.DEFAULT_OPTION,
+      JOptionPane.PLAIN_MESSAGE,
+      null,
+      COPY_OPTIONS,
+      null,
+    )
 
-    val ips = NetworkInterface.getNetworkInterfaces()
-      .asSequence()
-      .filterNotNull()
-      .filterNot { it.isLoopback }
-      .filterNot {
-        it.hardwareAddress != null
-        &&
-        it.hardwareAddress.sliceArray(0..1).contentEquals(dockerVendor)
-      }
-      .flatMap { it.interfaceAddresses?.asSequence()?.filterNotNull() ?: emptySequence() }
-      .mapNotNull { (it.address as? Inet4Address)?.hostAddress }
-      .toList()
-
-    val ipsString = if (ips.size == 1) {
-      ips.single()
-    }
-    else {
-      ips.joinToString(",", prefix = "[", postfix = "]")
+    val tokenPropertyName = when (COPY_OPTIONS[option]) {
+      RO -> ProjectorServer.RO_TOKEN_ENV_NAME
+      RW -> ProjectorServer.TOKEN_ENV_NAME
+      else -> return
     }
 
-    val connectionURL = "http://$ipsString:8887"
-    Toolkit
-      .getDefaultToolkit()
-      .systemClipboard
-      .setContents(StringSelection(connectionURL), null)
+    ProjectorService.currentSession!!.copyInvitationLink(tokenPropertyName)
   }
 
   override fun update(e: AnActionEvent) {
     val state = ProjectorService.enabled == EnabledState.HAS_VM_OPTIONS_AND_ENABLED
     e.presentation.isEnabled = state
     e.presentation.isVisible = state
+  }
+
+  companion object {
+    const val RW = "Full Access"
+    const val RO = "View Only"
+    const val CANCEL = "Cancel"
+
+    val COPY_OPTIONS = arrayOf(RW, RO, CANCEL)
   }
 }
