@@ -31,11 +31,6 @@ class Session(
     System.setProperty(ProjectorServer.RO_TOKEN_ENV_NAME, tokenRO)
   }
 
-  fun start() {
-    ProjectorService.currentSession = this
-    ProjectorService.enable()
-  }
-
   fun copyInvitationLink(tokenPropertyName: String) {
     val token = System.getProperty(tokenPropertyName) ?: ""
     val url = Utils.getUrl(host, port, token)

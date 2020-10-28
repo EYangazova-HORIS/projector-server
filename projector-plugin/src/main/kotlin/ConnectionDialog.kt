@@ -33,11 +33,12 @@ import javax.swing.*
 import kotlin.random.Random
 
 class ConnectionDialog(project: Project?) : DialogWrapper(project) {
+  private val charPool: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
   private var panelWrapper: JPanel = JPanel()
   val host: JComboBox<String> = ComboBox(getHosts())
   val port: JTextField = JTextField(Utils.getPort())
-  val tokenRW: JTextField = JTextField()
-  val tokenRO: JTextField = JTextField()
+  val tokenRW: JTextField = JTextField(getSecret())
+  val tokenRO: JTextField = JTextField(getSecret())
   private val copyRW = JButton(AllIcons.Actions.Copy)
   private val copyRO = JButton(AllIcons.Actions.Copy)
   private val urlRW: JLabel = JLabel()
@@ -47,9 +48,6 @@ class ConnectionDialog(project: Project?) : DialogWrapper(project) {
     title = "Start Remote Access to IDE"
     setResizable(false)
     init()
-
-    tokenRW.text = getSecret()
-    tokenRO.text = getSecret()
     updateUrls()
 
     val keyListener: KeyListener = object : KeyAdapter() {
@@ -162,6 +160,32 @@ class ConnectionDialog(project: Project?) : DialogWrapper(project) {
     return panelWrapper
   }
 
+  private fun getHosts(): Array<String> {
+    val dockerVendor = byteArrayOf(0x02.toByte(), 0x42.toByte())
+    val arr = emptyArray<String>()
+
+    return NetworkInterface.getNetworkInterfaces()
+      .asSequence()
+      .filterNotNull()
+      .filterNot { it.isLoopback }
+      .filterNot {
+        it.hardwareAddress != null
+        &&
+        it.hardwareAddress.sliceArray(0..1).contentEquals(dockerVendor)
+      }
+      .flatMap { it.interfaceAddresses?.asSequence()?.filterNotNull() ?: emptySequence() }
+      .mapNotNull { (it.address as? Inet4Address)?.hostName }
+      .toList()
+      .toArray(arr)
+  }
+
+  private fun getSecret(): String {
+    return (1..11)
+      .map { Random.nextInt(0, charPool.size) }
+      .map(charPool::get)
+      .joinToString("")
+  }
+
   private fun getUrl(token: String?): String {
     return Utils.getUrl(host.selectedItem as String, port.text, token ?: "")
   }
@@ -169,35 +193,5 @@ class ConnectionDialog(project: Project?) : DialogWrapper(project) {
   private fun updateUrls() {
     urlRW.text = getUrl(tokenRW.text)
     urlRO.text = getUrl(tokenRO.text)
-  }
-
-  companion object {
-    private val charPool: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
-
-    private fun getSecret(): String {
-      return (1..11)
-        .map { Random.nextInt(0, charPool.size) }
-        .map(charPool::get)
-        .joinToString("")
-    }
-
-    private fun getHosts(): Array<String> {
-      val dockerVendor = byteArrayOf(0x02.toByte(), 0x42.toByte())
-      val arr = emptyArray<String>()
-
-      return NetworkInterface.getNetworkInterfaces()
-        .asSequence()
-        .filterNotNull()
-        .filterNot { it.isLoopback }
-        .filterNot {
-          it.hardwareAddress != null
-          &&
-          it.hardwareAddress.sliceArray(0..1).contentEquals(dockerVendor)
-        }
-        .flatMap { it.interfaceAddresses?.asSequence()?.filterNotNull() ?: emptySequence() }
-        .mapNotNull { (it.address as? Inet4Address)?.hostName }
-        .toList()
-        .toArray(arr)
-    }
   }
 }
