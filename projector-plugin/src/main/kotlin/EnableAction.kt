@@ -34,13 +34,13 @@ class EnableAction : DumbAwareAction() {
                             dialog.port.text,
                             dialog.tokenRW.text,
                             dialog.tokenRO.text)
-      ProjectorService.currentSession = session
-      ProjectorService.enable()
+      ProjectorService.instance.currentSession = session
+      ProjectorService.instance.enable()
     }
   }
 
   override fun update(e: AnActionEvent) {
-    val state = ProjectorService.enabled == EnabledState.HAS_VM_OPTIONS_AND_DISABLED
+    val state = ProjectorService.instance.enabled == EnabledState.HAS_VM_OPTIONS_AND_DISABLED
     e.presentation.isEnabled = state
     e.presentation.isVisible = state
   }

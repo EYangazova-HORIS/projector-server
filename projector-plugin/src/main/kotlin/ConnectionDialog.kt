@@ -48,6 +48,15 @@ class ConnectionDialog(project: Project?) : DialogWrapper(project) {
     title = "Start Remote Access to IDE"
     setResizable(false)
     init()
+
+    if (!ProjectorService.instance.selectedHost.isNullOrEmpty()) {
+      host.selectedItem = ProjectorService.instance.selectedHost
+    }
+
+    if (!ProjectorService.instance.selectedPort.isNullOrEmpty()) {
+      port.text = ProjectorService.instance.selectedPort
+    }
+
     updateUrls()
 
     val keyListener: KeyListener = object : KeyAdapter() {

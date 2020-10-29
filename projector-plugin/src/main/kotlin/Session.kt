@@ -19,8 +19,8 @@
 import org.jetbrains.projector.server.ProjectorServer
 
 class Session(
-  private var host: String,
-  private var port: String,
+  val host: String,
+  val port: String,
   tokenRW: String,
   tokenRO: String,
 ) {

@@ -24,14 +24,14 @@ import javax.swing.JOptionPane
 class CopyUrlAction : DumbAwareAction() {
 
   override fun actionPerformed(e: AnActionEvent) {
-    require(ProjectorService.currentSession != null) {
+    require(ProjectorService.instance.currentSession != null) {
       "Projector session is not started"
     }
 
     val rwOption = "Full Access"
     val roOption = "View Only"
     val cancelOption = "Cancel"
-    val invitationDialogOption = arrayOf(rwOption, roOption, cancelOption)
+    val invitationDialogOptions = arrayOf(rwOption, roOption, cancelOption)
 
     val selectedInvitationOption = JOptionPane.showOptionDialog(
       null,
@@ -40,21 +40,21 @@ class CopyUrlAction : DumbAwareAction() {
       JOptionPane.DEFAULT_OPTION,
       JOptionPane.PLAIN_MESSAGE,
       null,
-      invitationDialogOption,
+      invitationDialogOptions,
       null,
     )
 
-    val tokenPropertyName = when (invitationDialogOption[selectedInvitationOption]) {
+    val tokenPropertyName = when (invitationDialogOptions[selectedInvitationOption]) {
       roOption -> ProjectorServer.RO_TOKEN_ENV_NAME
       rwOption -> ProjectorServer.TOKEN_ENV_NAME
       else -> return
     }
 
-    ProjectorService.currentSession!!.copyInvitationLink(tokenPropertyName)
+    ProjectorService.instance.currentSession!!.copyInvitationLink(tokenPropertyName)
   }
 
   override fun update(e: AnActionEvent) {
-    val state = ProjectorService.enabled == EnabledState.HAS_VM_OPTIONS_AND_ENABLED
+    val state = ProjectorService.instance.enabled == EnabledState.HAS_VM_OPTIONS_AND_ENABLED
     e.presentation.isEnabled = state
     e.presentation.isVisible = state
   }
