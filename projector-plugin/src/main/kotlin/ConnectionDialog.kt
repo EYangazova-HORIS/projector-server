@@ -49,12 +49,12 @@ class ConnectionDialog(project: Project?) : DialogWrapper(project) {
     setResizable(false)
     init()
 
-    if (!ProjectorService.instance.selectedHost.isNullOrEmpty()) {
-      host.selectedItem = ProjectorService.instance.selectedHost
+    if (!ProjectorService.instance.host.isNullOrEmpty()) {
+      host.selectedItem = ProjectorService.instance.host
     }
 
-    if (!ProjectorService.instance.selectedPort.isNullOrEmpty()) {
-      port.text = ProjectorService.instance.selectedPort
+    if (!ProjectorService.instance.port.isNullOrEmpty()) {
+      port.text = ProjectorService.instance.port
     }
 
     updateUrls()

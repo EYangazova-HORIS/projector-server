@@ -43,16 +43,16 @@ enum class EnabledState {
 }
 
 class ProjectorConfig : PersistentStateComponent<ProjectorConfig> {
-  var selectedHost: String? = null
-  var selectedPort: String? = null
+  var host: String? = null
+  var port: String? = null
 
   override fun getState(): ProjectorConfig? {
     return this
   }
 
   override fun loadState(state: ProjectorConfig) {
-    selectedHost = state.selectedHost
-    selectedPort = state.selectedPort
+    host = state.host
+    port = state.port
   }
 }
 
@@ -62,17 +62,17 @@ class ProjectorService : PersistentStateComponent<ProjectorConfig> {
   private val logger = Logger.getInstance(ProjectorService::class.java)
   private val plugin = PluginManager.getPlugin(PluginId.getId("org.jetbrains.projector-plugin"))!!
 
-  val selectedHost: String?
-    get() = config.selectedHost
+  val host: String?
+    get() = config.host
 
-  val selectedPort: String?
-    get() = config.selectedPort
+  val port: String?
+    get() = config.port
 
   var currentSession: Session? = null
     set(value) {
       field = value
-      config.selectedHost = value!!.host
-      config.selectedPort = value.port
+      config.host = value?.host
+      config.port = value?.port
     }
 
   var enabled: EnabledState = when (areRequiredVmOptionsPresented()) {
