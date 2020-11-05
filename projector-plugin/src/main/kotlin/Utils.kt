@@ -35,6 +35,6 @@ object Utils {
   }
 
   fun getUrl(host: String, port: String, token: String?): String {
-    return "http://${host}:${port}" + if (token.isNullOrEmpty()) "" else "/index.html?token=${token}"
+    return "http://${host}:${port}" + if (token == null) "" else "/index.html?token=${token}"
   }
 }

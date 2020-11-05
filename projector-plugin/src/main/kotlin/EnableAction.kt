@@ -30,10 +30,10 @@ class EnableAction : DumbAwareAction() {
     dialog.show()
 
     if (dialog.exitCode == DialogWrapper.OK_EXIT_CODE) {
-      val session = Session(dialog.host.selectedItem as String,
-                            dialog.port.text,
-                            dialog.tokenRW.text,
-                            dialog.tokenRO.text)
+      val session = Session(dialog.getHost(),
+                            dialog.getPort(),
+                            dialog.getTokenRW(),
+                            dialog.getTokenRO())
       ProjectorService.instance.currentSession = session
       ProjectorService.instance.enable()
     }

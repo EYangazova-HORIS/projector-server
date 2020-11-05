@@ -21,6 +21,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.util.containers.toArray
+import java.awt.Component
 import java.awt.ComponentOrientation
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -32,17 +33,47 @@ import java.net.NetworkInterface
 import javax.swing.*
 import kotlin.random.Random
 
+private class CenterPanelBuilder(private var panelWrapper: JPanel) {
+  private val constraints = GridBagConstraints()
+
+  init {
+    panelWrapper.componentOrientation = ComponentOrientation.LEFT_TO_RIGHT
+    panelWrapper.layout = GridBagLayout()
+    constraints.fill = GridBagConstraints.HORIZONTAL
+    constraints.gridx = 0
+    constraints.gridy = 0
+  }
+
+  fun addNext(c: Component, width: Int = 1, padY: Int = 0): CenterPanelBuilder {
+    constraints.gridwidth = width
+    constraints.ipady = padY
+    panelWrapper.add(c, constraints)
+    constraints.gridx += width
+    return this
+  }
+
+  fun startNextLine(): CenterPanelBuilder {
+    constraints.gridx = 0
+    constraints.gridy += 1
+    return this
+  }
+}
+
 class ConnectionDialog(project: Project?) : DialogWrapper(project) {
   private val charPool: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
   private var panelWrapper: JPanel = JPanel()
-  val host: JComboBox<String> = ComboBox(getHosts())
-  val port: JTextField = JTextField(Utils.getPort())
-  val tokenRW: JTextField = JTextField(getSecret())
-  val tokenRO: JTextField = JTextField(getSecret())
+  private val host: JComboBox<String> = ComboBox(getHosts())
+  private val port: JTextField = JTextField(Utils.getPort())
+  private val notUsePwdRW: JCheckBox = JCheckBox("Not use")
+  private val notUsePwdRO: JCheckBox = JCheckBox("Not use")
+  private val tokenRW: JTextField = JTextField(getSecret())
+  private val tokenRO: JTextField = JTextField(getSecret())
   private val copyRW = JButton(AllIcons.Actions.Copy)
   private val copyRO = JButton(AllIcons.Actions.Copy)
   private val urlRW: JLabel = JLabel()
   private val urlRO: JLabel = JLabel()
+  private val labelRW: JLabel = JLabel("Full Access URL:")
+  private val labelRO: JLabel = JLabel("View Only URL:")
 
   init {
     title = "Start Remote Access to IDE"
@@ -58,6 +89,18 @@ class ConnectionDialog(project: Project?) : DialogWrapper(project) {
     }
 
     updateUrls()
+
+    notUsePwdRW.addActionListener {
+      tokenRW.text = if (notUsePwdRW.isSelected) null else getSecret()
+      tokenRW.isEnabled = !notUsePwdRW.isSelected
+      updateUrls()
+    }
+
+    notUsePwdRO.addActionListener {
+      tokenRO.text = if (notUsePwdRO.isSelected) null else getSecret()
+      tokenRO.isEnabled = !notUsePwdRO.isSelected
+      updateUrls()
+    }
 
     val keyListener: KeyListener = object : KeyAdapter() {
       override fun keyReleased(e: KeyEvent) {
@@ -87,84 +130,14 @@ class ConnectionDialog(project: Project?) : DialogWrapper(project) {
   }
 
   override fun createCenterPanel(): JComponent? {
-    panelWrapper.componentOrientation = ComponentOrientation.LEFT_TO_RIGHT
-    panelWrapper.layout = GridBagLayout()
-
-    val constraints = GridBagConstraints()
-    constraints.fill = GridBagConstraints.HORIZONTAL
-
-    constraints.ipady = 10
-    constraints.gridwidth = 4
-    constraints.gridx = 0
-    constraints.gridy = 0
-    panelWrapper.add(JLabel("<html>Do you want to provide remote access to IDE?<br>Please check your connection parameters:"),
-                     constraints)
-
-    constraints.ipady = 0
-    constraints.gridwidth = 1
-    constraints.gridx = 0
-    constraints.gridy = 1
-    panelWrapper.add(JLabel("Host:"), constraints)
-
-    constraints.gridx = 0
-    constraints.gridy = 2
-    panelWrapper.add(JLabel("Port:"), constraints)
-
-    constraints.gridx = 0
-    constraints.gridy = 3
-    panelWrapper.add(JLabel("Secret read-write:"), constraints)
-
-    constraints.gridx = 0
-    constraints.gridy = 4
-    panelWrapper.add(JLabel("Secret read-only:"), constraints)
-
-    constraints.gridwidth = 2
-    constraints.gridx = 1
-    constraints.gridy = 1
-    panelWrapper.add(host, constraints)
-
-    constraints.gridx = 1
-    constraints.gridy = 2
-    panelWrapper.add(port, constraints)
-
-    constraints.gridx = 1
-    constraints.gridy = 3
-    panelWrapper.add(tokenRW, constraints)
-
-    constraints.gridx = 1
-    constraints.gridy = 4
-    panelWrapper.add(tokenRO, constraints)
-
-    constraints.ipady = 10
-    constraints.gridwidth = 1
-    constraints.gridx = 0
-    constraints.gridy = 5
-    panelWrapper.add(JLabel("Full Access URL:"), constraints)
-
-    constraints.gridx = 0
-    constraints.gridy = 6
-    panelWrapper.add(JLabel("View Only URL:"), constraints)
-
-    constraints.gridwidth = 2
-    constraints.gridx = 1
-    constraints.gridy = 5
-    panelWrapper.add(urlRW, constraints)
-
-    constraints.gridwidth = 2
-    constraints.gridx = 1
-    constraints.gridy = 6
-    panelWrapper.add(urlRO, constraints)
-
-    constraints.ipadx = 0
-    constraints.ipady = 0
-    constraints.gridwidth = 0
-    constraints.gridx = 3
-    constraints.gridy = 5
-    panelWrapper.add(copyRW, constraints)
-
-    constraints.gridx = 3
-    constraints.gridy = 6
-    panelWrapper.add(copyRO, constraints)
+    CenterPanelBuilder(panelWrapper)
+      .addNext(JLabel("<html>Do you want to provide remote access to IDE?<br>Please check your connection parameters:"), 4, 10)
+      .startNextLine().addNext(JLabel("Host:")).addNext(host, 2)
+      .startNextLine().addNext(JLabel("Port:")).addNext(port, 2)
+      .startNextLine().addNext(JLabel("Secret read-write:")).addNext(tokenRW, 2).addNext(notUsePwdRW)
+      .startNextLine().addNext(JLabel("Secret read-only:")).addNext(tokenRO, 2).addNext(notUsePwdRO)
+      .startNextLine().addNext(labelRW, 1, 10).addNext(urlRW, 2).addNext(copyRW)
+      .startNextLine().addNext(labelRO, 1, 10).addNext(urlRO, 2).addNext(copyRO)
 
     return panelWrapper
   }
@@ -196,11 +169,32 @@ class ConnectionDialog(project: Project?) : DialogWrapper(project) {
   }
 
   private fun getUrl(token: String?): String {
-    return Utils.getUrl(host.selectedItem as String, port.text, token ?: "")
+    return Utils.getUrl(host.selectedItem as String, port.text, token)
   }
 
   private fun updateUrls() {
-    urlRW.text = getUrl(tokenRW.text)
-    urlRO.text = getUrl(tokenRO.text)
+    urlRW.text = getUrl(getTokenRW())
+    urlRO.text = getUrl(getTokenRO())
+
+    val notUsePasswords = (notUsePwdRW.isSelected && notUsePwdRO.isSelected)
+    labelRO.isVisible = !notUsePasswords
+    urlRO.isVisible = !notUsePasswords
+    copyRO.isVisible = !notUsePasswords
+  }
+
+  fun getTokenRW(): String? {
+    return if (notUsePwdRW.isSelected) null else tokenRW.text
+  }
+
+  fun getTokenRO(): String? {
+    return if (notUsePwdRO.isSelected) null else tokenRO.text
+  }
+
+  fun getHost(): String {
+    return host.selectedItem as String
+  }
+
+  fun getPort(): String {
+    return port.text
   }
 }
