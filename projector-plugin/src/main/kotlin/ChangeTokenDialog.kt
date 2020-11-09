@@ -44,7 +44,7 @@ class ChangeTokenDialog(project: Project?) : DialogWrapper(project) {
     urlRWPanel = UrlPanel(session.getUrl(ProjectorServer.TOKEN_ENV_NAME))
     urlROPanel = UrlPanel(session.getUrl(ProjectorServer.RO_TOKEN_ENV_NAME))
 
-    title = "Change Secrets"
+    title = "Change Passwords"
     setResizable(false)
     init()
   }
@@ -58,8 +58,8 @@ class ChangeTokenDialog(project: Project?) : DialogWrapper(project) {
     val panel = JPanel()
     LinearPanelBuilder(panel)
       .addNextComponent(JLabel("Do you want to change passwords?"), 2, 10)
-      .startNextLine().addNextComponent(JLabel(UIUtils.SECRET_RW_TEXT)).addNextComponent(tokenRWPanel)
-      .startNextLine().addNextComponent(JLabel(UIUtils.SECRET_RO_TEXT)).addNextComponent(tokenROPanel)
+      .startNextLine().addNextComponent(JLabel(UIUtils.PWD_RW_TEXT)).addNextComponent(tokenRWPanel)
+      .startNextLine().addNextComponent(JLabel(UIUtils.PWD_RO_TEXT)).addNextComponent(tokenROPanel)
       .startNextLine().addNextComponent(JLabel(UIUtils.URL_RW_TEXT)).addNextComponent(urlRWPanel)
       .startNextLine().addNextComponent(labelUrlRO).addNextComponent(urlROPanel)
     return panel

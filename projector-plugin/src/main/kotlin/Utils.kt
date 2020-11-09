@@ -31,7 +31,7 @@ object Utils {
       .setContents(StringSelection(string), null)
   }
 
-  fun getSecret(): String {
+  fun getPassword(): String {
     return (1..11)
       .map { Random.nextInt(0, charPool.size) }
       .map(charPool::get)

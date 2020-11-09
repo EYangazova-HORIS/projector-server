@@ -56,8 +56,8 @@ class ConnectionDialog(project: Project?) : DialogWrapper(project) {
     }
     port.addKeyListener(keyListener)
 
-    tokenRWPanel = TokenPanel(Utils.getSecret(), ::updateUrls)
-    tokenROPanel = TokenPanel(Utils.getSecret(), ::updateUrls)
+    tokenRWPanel = TokenPanel(Utils.getPassword(), ::updateUrls)
+    tokenROPanel = TokenPanel(Utils.getPassword(), ::updateUrls)
     urlRWPanel = UrlPanel(getUrl(tokenRWPanel.getToken()))
     urlROPanel = UrlPanel(getUrl(tokenROPanel.getToken()))
 
@@ -77,8 +77,8 @@ class ConnectionDialog(project: Project?) : DialogWrapper(project) {
       .addNextComponent(JLabel("<html>Do you want to provide remote access to IDE?<br>Please check your connection parameters:"), 2, 10)
       .startNextLine().addNextComponent(JLabel("Host:")).addNextComponent(host)
       .startNextLine().addNextComponent(JLabel("Port:")).addNextComponent(port)
-      .startNextLine().addNextComponent(JLabel(UIUtils.SECRET_RW_TEXT)).addNextComponent(tokenRWPanel)
-      .startNextLine().addNextComponent(JLabel(UIUtils.SECRET_RO_TEXT)).addNextComponent(tokenROPanel)
+      .startNextLine().addNextComponent(JLabel(UIUtils.PWD_RW_TEXT)).addNextComponent(tokenRWPanel)
+      .startNextLine().addNextComponent(JLabel(UIUtils.PWD_RO_TEXT)).addNextComponent(tokenROPanel)
       .startNextLine().addNextComponent(JLabel(UIUtils.URL_RW_TEXT)).addNextComponent(urlRWPanel)
       .startNextLine().addNextComponent(labelUrlRO).addNextComponent(urlROPanel)
     return panel

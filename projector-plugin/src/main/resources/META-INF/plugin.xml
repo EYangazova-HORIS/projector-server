@@ -40,7 +40,7 @@
       <action id="projector.enable" class="EnableAction" text="Start Remote Access to IDE" description="Enable projector"/>
       <action id="projector.disable" class="DisableAction" text="Stop Remote Access to IDE" description="Disable projector"/>
       <action id="projector.copy" class="CopyUrlAction" text="Copy Invitation Link" description="Copy invitation link"/>
-      <action id="projector.change" class="ChangeTokenAction" text="Change Secrets" description="Change passwords"/>
+      <action id="projector.change" class="ChangeTokenAction" text="Change Passwords" description="Change passwords"/>
       <action id="projector.activate" class="ActivateAction" text="Activate Remote Access to IDE (First Time Setup)"
               description="Activate projector"/>
     </group>

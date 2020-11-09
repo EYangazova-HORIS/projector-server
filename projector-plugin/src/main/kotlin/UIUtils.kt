@@ -90,7 +90,7 @@ class TokenPanel(token: String?, onChangeAction: () -> Unit) : JPanel() {
     tokenField.addKeyListener(keyListener)
 
     notUseFlag.addActionListener {
-      tokenField.text = if (notUseFlag.isSelected) null else Utils.getSecret()
+      tokenField.text = if (notUseFlag.isSelected) null else Utils.getPassword()
       tokenField.isEnabled = !notUseFlag.isSelected
       onChangeAction()
     }
@@ -107,8 +107,8 @@ class TokenPanel(token: String?, onChangeAction: () -> Unit) : JPanel() {
 }
 
 object UIUtils {
-  const val SECRET_RW_TEXT = "Secret read-write:"
-  const val SECRET_RO_TEXT = "Secret read-only:"
+  const val PWD_RW_TEXT = "Password read-write:"
+  const val PWD_RO_TEXT = "Password read-only:"
   const val URL_RW_TEXT = "Full Access URL:"
   const val URL_RO_TEXT = "View Only URL:"
 
