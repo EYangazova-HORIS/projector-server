@@ -19,14 +19,23 @@
 import org.jetbrains.projector.server.ProjectorServer
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
+import kotlin.random.Random
 
 object Utils {
+  private val charPool: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
 
   fun copyToClipboard(string: String) {
     Toolkit
       .getDefaultToolkit()
       .systemClipboard
       .setContents(StringSelection(string), null)
+  }
+
+  fun getSecret(): String {
+    return (1..11)
+      .map { Random.nextInt(0, charPool.size) }
+      .map(charPool::get)
+      .joinToString("")
   }
 
   fun getPort(): String {

@@ -19,7 +19,9 @@
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.DumbAwareAction
 import org.jetbrains.projector.server.ProjectorServer
+import javax.swing.JLabel
 import javax.swing.JOptionPane
+import javax.swing.JPanel
 
 class CopyUrlAction : DumbAwareAction() {
 
@@ -28,6 +30,16 @@ class CopyUrlAction : DumbAwareAction() {
       "Projector session is not started"
     }
 
+    val session = ProjectorService.instance.currentSession!!
+    val urlRWPanel = UrlPanel(session.getUrl(ProjectorServer.TOKEN_ENV_NAME))
+    val urlROPanel = UrlPanel(session.getUrl(ProjectorServer.RO_TOKEN_ENV_NAME))
+
+    val panel = JPanel()
+    LinearPanelBuilder(panel)
+      .addNextComponent(JLabel("Copy the link depending on the type of access you want to grant:"), 2, 10)
+      .startNextLine().addNextComponent(JLabel(UIUtils.URL_RW_TEXT)).addNextComponent(urlRWPanel)
+      .startNextLine().addNextComponent(JLabel(UIUtils.URL_RO_TEXT)).addNextComponent(urlROPanel)
+
     val rwOption = "Full Access"
     val roOption = "View Only"
     val cancelOption = "Cancel"
@@ -35,7 +47,7 @@ class CopyUrlAction : DumbAwareAction() {
 
     val selectedInvitationOption = JOptionPane.showOptionDialog(
       null,
-      "Copy the link depending on the type of access you want to grant.",
+      panel,
       "Copy Invitation Link",
       JOptionPane.DEFAULT_OPTION,
       JOptionPane.PLAIN_MESSAGE,

@@ -16,70 +16,27 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.util.containers.toArray
-import java.awt.Component
-import java.awt.ComponentOrientation
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import javax.swing.*
-import kotlin.random.Random
-
-private class CenterPanelBuilder(private var panelWrapper: JPanel) {
-  private val constraints = GridBagConstraints()
-
-  init {
-    panelWrapper.componentOrientation = ComponentOrientation.LEFT_TO_RIGHT
-    panelWrapper.layout = GridBagLayout()
-    constraints.fill = GridBagConstraints.HORIZONTAL
-    constraints.gridx = 0
-    constraints.gridy = 0
-  }
-
-  fun addNext(c: Component, width: Int = 1, padY: Int = 0): CenterPanelBuilder {
-    constraints.gridwidth = width
-    constraints.ipady = padY
-    panelWrapper.add(c, constraints)
-    constraints.gridx += width
-    return this
-  }
-
-  fun startNextLine(): CenterPanelBuilder {
-    constraints.gridx = 0
-    constraints.gridy += 1
-    return this
-  }
-}
 
 class ConnectionDialog(project: Project?) : DialogWrapper(project) {
-  private val charPool: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
-  private var panelWrapper: JPanel = JPanel()
   private val host: JComboBox<String> = ComboBox(getHosts())
   private val port: JTextField = JTextField(Utils.getPort())
-  private val notUsePwdRW: JCheckBox = JCheckBox("Not use")
-  private val notUsePwdRO: JCheckBox = JCheckBox("Not use")
-  private val tokenRW: JTextField = JTextField(getSecret())
-  private val tokenRO: JTextField = JTextField(getSecret())
-  private val copyRW = JButton(AllIcons.Actions.Copy)
-  private val copyRO = JButton(AllIcons.Actions.Copy)
-  private val urlRW: JLabel = JLabel()
-  private val urlRO: JLabel = JLabel()
-  private val labelRW: JLabel = JLabel("Full Access URL:")
-  private val labelRO: JLabel = JLabel("View Only URL:")
+  private var tokenRWPanel: TokenPanel
+  private var tokenROPanel: TokenPanel
+  private var urlRWPanel: UrlPanel
+  private var urlROPanel: UrlPanel
+  private val labelUrlRO = JLabel(UIUtils.URL_RO_TEXT)
 
   init {
-    title = "Start Remote Access to IDE"
-    setResizable(false)
-    init()
-
     if (!ProjectorService.instance.host.isNullOrEmpty()) {
       host.selectedItem = ProjectorService.instance.host
     }
@@ -88,17 +45,7 @@ class ConnectionDialog(project: Project?) : DialogWrapper(project) {
       port.text = ProjectorService.instance.port
     }
 
-    updateUrls()
-
-    notUsePwdRW.addActionListener {
-      tokenRW.text = if (notUsePwdRW.isSelected) null else getSecret()
-      tokenRW.isEnabled = !notUsePwdRW.isSelected
-      updateUrls()
-    }
-
-    notUsePwdRO.addActionListener {
-      tokenRO.text = if (notUsePwdRO.isSelected) null else getSecret()
-      tokenRO.isEnabled = !notUsePwdRO.isSelected
+    host.addActionListener {
       updateUrls()
     }
 
@@ -108,20 +55,15 @@ class ConnectionDialog(project: Project?) : DialogWrapper(project) {
       }
     }
     port.addKeyListener(keyListener)
-    tokenRW.addKeyListener(keyListener)
-    tokenRO.addKeyListener(keyListener)
 
-    host.addActionListener {
-      updateUrls()
-    }
+    tokenRWPanel = TokenPanel(Utils.getSecret(), ::updateUrls)
+    tokenROPanel = TokenPanel(Utils.getSecret(), ::updateUrls)
+    urlRWPanel = UrlPanel(getUrl(tokenRWPanel.getToken()))
+    urlROPanel = UrlPanel(getUrl(tokenROPanel.getToken()))
 
-    copyRW.addActionListener {
-      Utils.copyToClipboard(urlRW.text)
-    }
-
-    copyRO.addActionListener {
-      Utils.copyToClipboard(urlRO.text)
-    }
+    title = "Start Remote Access to IDE"
+    setResizable(false)
+    init()
   }
 
   override fun createDefaultActions() {
@@ -130,16 +72,16 @@ class ConnectionDialog(project: Project?) : DialogWrapper(project) {
   }
 
   override fun createCenterPanel(): JComponent? {
-    CenterPanelBuilder(panelWrapper)
-      .addNext(JLabel("<html>Do you want to provide remote access to IDE?<br>Please check your connection parameters:"), 4, 10)
-      .startNextLine().addNext(JLabel("Host:")).addNext(host, 2)
-      .startNextLine().addNext(JLabel("Port:")).addNext(port, 2)
-      .startNextLine().addNext(JLabel("Secret read-write:")).addNext(tokenRW, 2).addNext(notUsePwdRW)
-      .startNextLine().addNext(JLabel("Secret read-only:")).addNext(tokenRO, 2).addNext(notUsePwdRO)
-      .startNextLine().addNext(labelRW, 1, 10).addNext(urlRW, 2).addNext(copyRW)
-      .startNextLine().addNext(labelRO, 1, 10).addNext(urlRO, 2).addNext(copyRO)
-
-    return panelWrapper
+    val panel = JPanel()
+    LinearPanelBuilder(panel)
+      .addNextComponent(JLabel("<html>Do you want to provide remote access to IDE?<br>Please check your connection parameters:"), 2, 10)
+      .startNextLine().addNextComponent(JLabel("Host:")).addNextComponent(host)
+      .startNextLine().addNextComponent(JLabel("Port:")).addNextComponent(port)
+      .startNextLine().addNextComponent(JLabel(UIUtils.SECRET_RW_TEXT)).addNextComponent(tokenRWPanel)
+      .startNextLine().addNextComponent(JLabel(UIUtils.SECRET_RO_TEXT)).addNextComponent(tokenROPanel)
+      .startNextLine().addNextComponent(JLabel(UIUtils.URL_RW_TEXT)).addNextComponent(urlRWPanel)
+      .startNextLine().addNextComponent(labelUrlRO).addNextComponent(urlROPanel)
+    return panel
   }
 
   private fun getHosts(): Array<String> {
@@ -161,33 +103,25 @@ class ConnectionDialog(project: Project?) : DialogWrapper(project) {
       .toArray(arr)
   }
 
-  private fun getSecret(): String {
-    return (1..11)
-      .map { Random.nextInt(0, charPool.size) }
-      .map(charPool::get)
-      .joinToString("")
-  }
-
   private fun getUrl(token: String?): String {
-    return Utils.getUrl(host.selectedItem as String, port.text, token)
+    return Utils.getUrl(getHost(), getPort(), token)
   }
 
   private fun updateUrls() {
-    urlRW.text = getUrl(getTokenRW())
-    urlRO.text = getUrl(getTokenRO())
+    urlRWPanel.setUrl(getUrl(tokenRWPanel.getToken()))
+    urlROPanel.setUrl(getUrl(tokenROPanel.getToken()))
 
-    val notUsePasswords = (notUsePwdRW.isSelected && notUsePwdRO.isSelected)
-    labelRO.isVisible = !notUsePasswords
-    urlRO.isVisible = !notUsePasswords
-    copyRO.isVisible = !notUsePasswords
+    val useDifferentTokens = UIUtils.useDifferentTokens(tokenRWPanel, tokenROPanel)
+    labelUrlRO.isVisible = useDifferentTokens
+    urlROPanel.isVisible = useDifferentTokens
   }
 
   fun getTokenRW(): String? {
-    return if (notUsePwdRW.isSelected) null else tokenRW.text
+    return tokenRWPanel.getToken()
   }
 
   fun getTokenRO(): String? {
-    return if (notUsePwdRO.isSelected) null else tokenRO.text
+    return tokenROPanel.getToken()
   }
 
   fun getHost(): String {

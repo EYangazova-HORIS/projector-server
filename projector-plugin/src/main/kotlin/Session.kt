@@ -27,17 +27,28 @@ class Session(
 
   init {
     System.setProperty(ProjectorServer.PORT_PROPERTY_NAME, port)
-    if (tokenRW != null) {
-      System.setProperty(ProjectorServer.TOKEN_ENV_NAME, tokenRW)
-    }
-    if (tokenRO != null) {
-      System.setProperty(ProjectorServer.RO_TOKEN_ENV_NAME, tokenRO)
-    }
+    setToken(ProjectorServer.TOKEN_ENV_NAME, tokenRW)
+    setToken(ProjectorServer.RO_TOKEN_ENV_NAME, tokenRO)
   }
 
   fun copyInvitationLink(tokenPropertyName: String) {
-    val token = System.getProperty(tokenPropertyName)
-    val url = Utils.getUrl(host, port, token)
-    Utils.copyToClipboard(url)
+    Utils.copyToClipboard(getUrl(tokenPropertyName))
+  }
+
+  fun getUrl(tokenPropertyName: String): String {
+    return Utils.getUrl(host, port, getToken(tokenPropertyName))
+  }
+
+  fun getToken(tokenPropertyName: String): String? {
+    return System.getProperty(tokenPropertyName)
+  }
+
+  fun setToken(tokenPropertyName: String, token: String?) {
+    if (token != null) {
+      System.setProperty(tokenPropertyName, token)
+    }
+    else {
+      System.clearProperty(tokenPropertyName)
+    }
   }
 }
