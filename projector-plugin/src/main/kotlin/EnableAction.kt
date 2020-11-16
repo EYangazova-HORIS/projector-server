@@ -25,7 +25,7 @@ class EnableAction : DumbAwareAction() {
 
   override fun actionPerformed(e: AnActionEvent) {
     val project = PlatformDataKeys.PROJECT.getData(e.dataContext)
-    val dialog = ConnectionDialog(project)
+    val dialog = SessionDialog(project)
     dialog.pack()
     dialog.show()
 

@@ -18,10 +18,8 @@
  */
 
 import com.intellij.icons.AllIcons
-import java.awt.Component
-import java.awt.ComponentOrientation
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
+import com.intellij.openapi.ui.ComboBox
+import java.awt.*
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
@@ -38,11 +36,15 @@ class LinearPanelBuilder(private var panelWrapper: JPanel) {
     constraints.gridy = 0
   }
 
-  fun addNextComponent(c: Component, width: Int = 1, padY: Int = 0): LinearPanelBuilder {
-    constraints.gridwidth = width
-    constraints.ipady = padY
+  fun addNextComponent(
+    c: Component, gridCount: Int = 1, width: Double = 1.0,
+    leftGap: Int = 0, rightGap: Int = 0, topGap: Int = 0, bottomGap: Int = 0,
+  ): LinearPanelBuilder {
+    constraints.gridwidth = gridCount
+    constraints.weightx = width
+    constraints.insets = Insets(topGap, leftGap, bottomGap, rightGap)
     panelWrapper.add(c, constraints)
-    constraints.gridx += width
+    constraints.gridx += gridCount
     return this
   }
 
@@ -53,13 +55,54 @@ class LinearPanelBuilder(private var panelWrapper: JPanel) {
   }
 }
 
+class HostPanel(host: String?, onChangeAction: () -> Unit) : JPanel() {
+  private val hostLabel = JLabel(UIUtils.HOST_TEXT)
+  val hostBox: JComboBox<String> = ComboBox(Utils.getHosts())
+
+  init {
+    LinearPanelBuilder(this)
+      .addNextComponent(hostLabel, width = 0.1)
+      .addNextComponent(hostBox)
+
+    if (!host.isNullOrEmpty()) {
+      hostBox.selectedItem = host
+    }
+
+    hostBox.addActionListener {
+      onChangeAction()
+    }
+  }
+}
+
+class PortPanel(port: String?, onChangeAction: () -> Unit) : JPanel() {
+  private val portLabel = JLabel(UIUtils.PORT_TEXT)
+  val portField: JTextField = JTextField(Utils.getPort())
+
+  init {
+    LinearPanelBuilder(this)
+      .addNextComponent(portLabel, width = 0.1)
+      .addNextComponent(portField)
+
+    if (!port.isNullOrEmpty()) {
+      portField.text = port
+    }
+
+    val keyListener: KeyListener = object : KeyAdapter() {
+      override fun keyReleased(e: KeyEvent) {
+        onChangeAction()
+      }
+    }
+    portField.addKeyListener(keyListener)
+  }
+}
+
 class UrlPanel(url: String) : JPanel() {
   private val urlField: JTextField = UIUtils.createSelectableLabel(url)
   private val copyButton = JButton(AllIcons.Actions.Copy)
 
   init {
+    urlField.columns = 30
     layout = BoxLayout(this, BoxLayout.LINE_AXIS)
-    urlField.columns = 35
     add(urlField)
     add(copyButton)
 
@@ -73,14 +116,15 @@ class UrlPanel(url: String) : JPanel() {
   }
 }
 
-class TokenPanel(token: String?, onChangeAction: () -> Unit) : JPanel() {
+class TokenPanel(accessType: String, token: String?, onChangeAction: () -> Unit) : JPanel() {
   private val tokenField: JTextField = JTextField(token)
-  private val notUseFlag: JCheckBox = JCheckBox("Not use")
+  private val requiredPwd: JCheckBox = JCheckBox("Require password for $accessType access:")
 
   init {
-    layout = BoxLayout(this, BoxLayout.LINE_AXIS)
-    add(tokenField)
-    add(notUseFlag)
+    tokenField.columns = 15
+    LinearPanelBuilder(this)
+      .addNextComponent(requiredPwd)
+      .addNextComponent(tokenField)
 
     val keyListener: KeyListener = object : KeyAdapter() {
       override fun keyReleased(e: KeyEvent) {
@@ -89,26 +133,29 @@ class TokenPanel(token: String?, onChangeAction: () -> Unit) : JPanel() {
     }
     tokenField.addKeyListener(keyListener)
 
-    notUseFlag.addActionListener {
-      tokenField.text = if (notUseFlag.isSelected) null else Utils.getPassword()
-      tokenField.isEnabled = !notUseFlag.isSelected
+    requiredPwd.addActionListener {
+      tokenField.text = if (requiredPwd.isSelected) Utils.getPassword() else null
+      tokenField.isEnabled = requiredPwd.isSelected
       onChangeAction()
     }
-    notUseFlag.isSelected = (token == null)
+    requiredPwd.isSelected = (token != null)
   }
 
-  fun getNotUseFlag(): Boolean {
-    return notUseFlag.isSelected
+  fun isRequiredPwd(): Boolean {
+    return requiredPwd.isSelected
   }
 
   fun getToken(): String? {
-    return if (notUseFlag.isSelected) null else tokenField.text
+    return if (requiredPwd.isSelected) tokenField.text else null
   }
 }
 
 object UIUtils {
-  const val PWD_RW_TEXT = "Password read-write:"
-  const val PWD_RO_TEXT = "Password read-only:"
+  const val RW_ACCESS = "read-write"
+  const val RO_ACCESS = "read-only"
+  const val HOST_TEXT = "Host:"
+  const val PORT_TEXT = "Port:"
+  const val LINKS_TEXT = "Invitation Links:"
   const val URL_RW_TEXT = "Full Access URL:"
   const val URL_RO_TEXT = "View Only URL:"
 
@@ -121,7 +168,6 @@ object UIUtils {
   }
 
   fun useDifferentTokens(rwPanel: TokenPanel, roPanel: TokenPanel): Boolean {
-    val notUsePasswords = (rwPanel.getNotUseFlag() && roPanel.getNotUseFlag())
-    return !notUsePasswords && (rwPanel.getToken() != roPanel.getToken())
+    return (rwPanel.isRequiredPwd() || roPanel.isRequiredPwd()) && (rwPanel.getToken() != roPanel.getToken())
   }
 }

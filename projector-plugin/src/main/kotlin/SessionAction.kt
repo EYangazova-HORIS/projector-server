@@ -22,7 +22,7 @@ import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.ui.DialogWrapper
 import org.jetbrains.projector.server.ProjectorServer
 
-class ChangeTokenAction : DumbAwareAction() {
+class SessionAction : DumbAwareAction() {
 
   override fun actionPerformed(e: AnActionEvent) {
     require(ProjectorService.instance.currentSession != null) {
@@ -30,7 +30,7 @@ class ChangeTokenAction : DumbAwareAction() {
     }
 
     val project = PlatformDataKeys.PROJECT.getData(e.dataContext)
-    val dialog = ChangeTokenDialog(project)
+    val dialog = SessionDialog(project)
     dialog.pack()
     dialog.show()
 
