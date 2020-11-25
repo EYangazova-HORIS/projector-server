@@ -1053,7 +1053,7 @@ class ProjectorServer private constructor(
     fun getEnvPort() = System.getProperty(PORT_PROPERTY_NAME)?.toIntOrNull() ?: DEFAULT_PORT
 
     fun getHostName(address: InetAddress): String? {
-      return try { Address.getHostName(address) } catch (e: UnknownHostException) {address.hostAddress}
+      return try { Address.getHostName(address).trimEnd('.') } catch (e: UnknownHostException) {address.hostAddress}
     }
   }
 }
