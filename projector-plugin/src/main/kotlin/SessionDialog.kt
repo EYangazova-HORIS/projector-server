@@ -146,7 +146,7 @@ class SessionDialog(project: Project?) : DialogWrapper(project) {
       isEditable = false
       background = null
       border = null
-      columns = 30
+      columns = 35
     }
 
     fun update(host: String, port: String, token: String?) {
