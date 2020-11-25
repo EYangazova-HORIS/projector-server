@@ -1054,6 +1054,8 @@ class ProjectorServer private constructor(
 
     fun getHostName(address: InetAddress): String? {
       return try {
+        // The trailing '.' makes the name into a "Fully Qualified Domain Name", i.e. an absolute domain name.
+        // dnsjava adds the trailing dot, but for our purpose we don't need it
         Address.getHostName(address).trimEnd('.')
       }
       catch (e: UnknownHostException) {
