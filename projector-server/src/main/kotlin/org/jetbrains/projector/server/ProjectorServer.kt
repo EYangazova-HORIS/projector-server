@@ -525,9 +525,10 @@ class ProjectorServer private constructor(
       return
     }
 
-    val ipString = conn.remoteSocketAddress?.address?.hostAddress
-    val address = conn.remoteSocketAddress?.address
-    val hostName = if (address != null) getHostName(address) else "unknown host"
+    val remoteAddress = conn.remoteSocketAddress?.address
+    check(remoteAddress != null) { "Remote address is null!" }
+    val ipString = remoteAddress.hostAddress
+    val hostName = getHostName(remoteAddress)
 
     if (
       isAgent &&
