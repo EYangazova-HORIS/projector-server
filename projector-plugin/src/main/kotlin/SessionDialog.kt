@@ -23,8 +23,9 @@ import com.intellij.openapi.ui.DialogWrapper
 import org.jetbrains.projector.server.ProjectorServer
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
-import java.awt.event.*
-import java.net.Inet4Address
+import java.awt.event.ItemEvent
+import java.awt.event.KeyAdapter
+import java.awt.event.KeyEvent
 import java.net.NetworkInterface
 import javax.swing.*
 import kotlin.random.Random
@@ -104,13 +105,19 @@ class SessionDialog(project: Project?) : DialogWrapper(project) {
   override fun createCenterPanel(): JComponent? {
     val panel = JPanel()
     LinearPanelBuilder(panel).addNextComponent(description, gridWidth = 4, bottomGap = 5)
-      .startNextLine().addNextComponent(myHostsList, gridWidth = 2, weightx = 0.5, rightGap = 15).addNextComponent(portEditor, gridWidth = 2, weightx = 0.5)
-      .startNextLine().addNextComponent(JLabel("Access Types:"), topGap = 5).addNextComponent(bothAccess, topGap = 5).addNextComponent(onlyRwAccess, topGap = 5)
-      .startNextLine().addNextComponent(rwTokenEditor.requiredCheckBox, gridWidth = 2).addNextComponent(rwTokenEditor.tokenTextField, gridWidth = 2)
-      .startNextLine().addNextComponent(roTokenEditor.requiredCheckBox, gridWidth = 2).addNextComponent(roTokenEditor.tokenTextField, gridWidth = 2)
+      .startNextLine().addNextComponent(myHostsList, gridWidth = 2, weightx = 0.5, rightGap = 15)
+        .addNextComponent(portEditor, gridWidth = 2, weightx = 0.5)
+      .startNextLine().addNextComponent(JLabel("Access Types:"), topGap = 5).addNextComponent(bothAccess, topGap = 5)
+        .addNextComponent(onlyRwAccess, topGap = 5)
+      .startNextLine().addNextComponent(rwTokenEditor.requiredCheckBox, gridWidth = 2)
+        .addNextComponent(rwTokenEditor.tokenTextField, gridWidth = 2)
+      .startNextLine().addNextComponent(roTokenEditor.requiredCheckBox, gridWidth = 2)
+        .addNextComponent(roTokenEditor.tokenTextField, gridWidth = 2)
       .startNextLine().addNextComponent(JLabel("Invitation Links:"), gridWidth = 4, topGap = 5, bottomGap = 5)
-      .startNextLine().addNextComponent(JLabel("Full Access Link:")).addNextComponent(rwInvitationLink.link, gridWidth = 2).addNextComponent(rwInvitationLink.copyButton)
-      .startNextLine().addNextComponent(roInvitationTitle).addNextComponent(roInvitationLink.link, gridWidth = 2).addNextComponent(roInvitationLink.copyButton)
+      .startNextLine().addNextComponent(JLabel("Full Access Link:")).addNextComponent(rwInvitationLink.link, gridWidth = 2)
+        .addNextComponent(rwInvitationLink.copyButton)
+      .startNextLine().addNextComponent(roInvitationTitle).addNextComponent(roInvitationLink.link, gridWidth = 2)
+        .addNextComponent(roInvitationLink.copyButton)
     return panel
   }
 
@@ -202,7 +209,7 @@ class SessionDialog(project: Project?) : DialogWrapper(project) {
             it.hardwareAddress.sliceArray(0..1).contentEquals(dockerVendor)
         }
         .flatMap { it.interfaceAddresses?.asSequence()?.filterNotNull() ?: emptySequence() }
-        .mapNotNull { (it.address as? Inet4Address)?.hostName }
+        .mapNotNull { ProjectorServer.getHostName(it.address) }
         .forEach(::addItem)
 
       selectedHost?.takeIf(String::isNotEmpty)?.let { selectedItem = it }

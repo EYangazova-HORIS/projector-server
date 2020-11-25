@@ -63,6 +63,7 @@ import org.jetbrains.projector.server.service.ProjectorImageCacher
 import org.jetbrains.projector.server.util.*
 import org.jetbrains.projector.util.logging.Logger
 import org.jetbrains.projector.util.logging.loggerFactory
+import org.xbill.DNS.Address
 import sun.awt.AWTAccessor
 import sun.font.FontManagerFactory
 import java.awt.*
@@ -74,6 +75,8 @@ import java.awt.event.MouseEvent
 import java.awt.event.MouseWheelEvent
 import java.awt.peer.ComponentPeer
 import java.io.FileInputStream
+import java.net.InetAddress
+import java.net.UnknownHostException
 import java.nio.ByteBuffer
 import java.security.KeyStore
 import java.util.*
@@ -523,6 +526,8 @@ class ProjectorServer private constructor(
     }
 
     val ipString = conn.remoteSocketAddress?.address?.hostAddress
+    val address = conn.remoteSocketAddress?.address
+    val hostName = if (address != null) getHostName(address) else "unknown host"
 
     if (
       isAgent &&
@@ -541,7 +546,7 @@ class ProjectorServer private constructor(
 
         selectedOption = JOptionPane.showOptionDialog(
           null,
-          "Somebody ($ipString) wants to connect with $accessType access. Allow the connection?",
+          "Somebody ($hostName) wants to connect with $accessType access. Allow the connection?",
           "New connection",
           JOptionPane.YES_NO_OPTION,
           JOptionPane.QUESTION_MESSAGE,
@@ -1045,5 +1050,9 @@ class ProjectorServer private constructor(
     const val ENABLE_CONNECTION_CONFIRMATION = "ORG_JETBRAINS_PROJECTOR_SERVER_CONNECTION_CONFIRMATION"
 
     fun getEnvPort() = System.getProperty(PORT_PROPERTY_NAME)?.toIntOrNull() ?: DEFAULT_PORT
+
+    fun getHostName(address: InetAddress): String? {
+      return try { Address.getHostName(address) } catch (e: UnknownHostException) {address.hostAddress}
+    }
   }
 }
