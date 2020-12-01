@@ -182,6 +182,36 @@ class ProjectorServer private constructor(
           ?.pngBase64,
       )
     }
+
+    override fun getClientList(): List<ClientAddress> {
+      val s = arrayListOf<ClientAddress>()
+      forEachOpenedConnection {
+        val remoteAddress = it.remoteSocketAddress?.address
+        if (remoteAddress != null) {
+          s.add(ClientAddress(
+            hostName = getHostName(remoteAddress),
+            address = remoteAddress.hostAddress
+          ))
+        }
+      }
+      return s.distinct().toList()
+    }
+
+    override fun disconnectAll(): String {
+      forEachOpenedConnection {
+        it.close()
+      }
+      return "SUCCESS"
+    }
+
+    override fun disconnectByIp(ip: String): String {
+      forEachOpenedConnection {
+        if (it.remoteSocketAddress?.address?.hostAddress == ip) {
+          it.close()
+        }
+      }
+      return "SUCCESS"
+    }
   }
 
   val wasStarted: Boolean by httpWsServer::wasStarted

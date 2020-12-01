@@ -23,8 +23,13 @@ plugins {
   id("org.jetbrains.intellij")
 }
 
+val ktorVersion: String by project
+val projectorClientVersion: String by project
+
 dependencies {
+  implementation("com.github.JetBrains.projector-client:projector-common:$projectorClientVersion")
   implementation(project(":projector-agent"))
+  implementation("io.ktor:ktor-client-cio:$ktorVersion")
 }
 
 intellij {
