@@ -182,7 +182,6 @@ class ProjectorServer private constructor(
           ?.pngBase64,
       )
     }
-
   }
 
   val wasStarted: Boolean by httpWsServer::wasStarted

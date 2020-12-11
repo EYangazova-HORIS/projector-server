@@ -66,8 +66,6 @@ class ConnectionPanel : JPanel() {
   }
 
   private fun update() {
-    //val list = ProjectorService.getClientList()
-    //val dataArray = ProjectorService.getClientList().map { arrayOf(it.address, it.hostName) }.toTypedArray()
     clientTable.model = DefaultTableModel(ProjectorService.getClientList(), columnNames)
     if (clientTable.model.rowCount > 0) {
       clientTable.setRowSelectionInterval(0, 0)
