@@ -56,6 +56,24 @@ internal object GraphicsInterceptor {
 
   @Suppress("unused")
   @JvmStatic
+  fun getClientList(): Array<Array<String?>> {
+    return server.getClientList()
+  }
+
+  @Suppress("unused")
+  @JvmStatic
+  fun disconnectAll() {
+    server.disconnectAll()
+  }
+
+  @Suppress("unused")
+  @JvmStatic
+  fun disconnectByIp(ip: String) {
+    server.disconnectByIp(ip)
+  }
+
+  @Suppress("unused")
+  @JvmStatic
   fun beginPaintToOffscreen(comp: JComponent, x: Integer, y: Integer, w: Integer, h: Integer) {
     paintToOffscreenInProgress = true
 

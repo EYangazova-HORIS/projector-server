@@ -183,35 +183,6 @@ class ProjectorServer private constructor(
       )
     }
 
-    override fun getClientList(): List<ClientAddress> {
-      val s = arrayListOf<ClientAddress>()
-      forEachOpenedConnection {
-        val remoteAddress = it.remoteSocketAddress?.address
-        if (remoteAddress != null) {
-          s.add(ClientAddress(
-            hostName = getHostName(remoteAddress),
-            address = remoteAddress.hostAddress
-          ))
-        }
-      }
-      return s.distinct().toList()
-    }
-
-    override fun disconnectAll(): String {
-      forEachOpenedConnection {
-        it.close()
-      }
-      return "SUCCESS"
-    }
-
-    override fun disconnectByIp(ip: String): String {
-      forEachOpenedConnection {
-        if (it.remoteSocketAddress?.address?.hostAddress == ip) {
-          it.close()
-        }
-      }
-      return "SUCCESS"
-    }
   }
 
   val wasStarted: Boolean by httpWsServer::wasStarted
@@ -680,6 +651,36 @@ class ProjectorServer private constructor(
     }
 
     caretInfoUpdater.stop()
+  }
+
+  fun getClientList(): Array<Array<String?>> {
+    val s = arrayListOf<Array<String?>>()
+    httpWsServer.forEachOpenedConnection {
+      val remoteAddress = it.remoteSocketAddress?.address
+      if (remoteAddress != null) {
+        s.add(arrayOf(
+          remoteAddress.hostAddress,
+          getHostName(remoteAddress)
+        ))
+      }
+    }
+    return s.distinctBy { it[0] }.toTypedArray()
+  }
+
+  fun disconnectAll(): String {
+    httpWsServer.forEachOpenedConnection {
+      it.close()
+    }
+    return "SUCCESS"
+  }
+
+  fun disconnectByIp(ip: String): String {
+    httpWsServer.forEachOpenedConnection {
+      if (it.remoteSocketAddress?.address?.hostAddress == ip) {
+        it.close()
+      }
+    }
+    return "SUCCESS"
   }
 
   companion object {

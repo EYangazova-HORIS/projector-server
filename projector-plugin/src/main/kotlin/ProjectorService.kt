@@ -169,6 +169,10 @@ class ProjectorService : PersistentStateComponent<ProjectorConfig> {
     fun disable() = instance.disable()
     fun activate() = instance.activate()
 
+    fun getClientList(): Array<Array<String?>> = AgentLauncher.getClientList()
+    fun disconnectAll() = AgentLauncher.disconnectAll()
+    fun disconnectByIp(ip: String) = AgentLauncher.disconnectByIp(ip)
+
     var enabled: EnabledState
       get() = instance.enabled
       set(value) {
