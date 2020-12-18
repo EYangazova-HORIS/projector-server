@@ -44,3 +44,42 @@ tasks.withType<PatchPluginXmlTask> {
     """
   )
 }
+
+val projectorClientVersion: String by project
+
+tasks.withType<ProcessResources> {
+  val pluginVersionTag: String = "git describe --match agent-v[0-9]* --abbrev=0 --tags".runCommand(workingDir = rootDir)
+  val serverVersionTag: String = "git describe --match v[0-9]* --abbrev=0 --tags".runCommand(workingDir = rootDir)
+
+  val pluginVersion = Pair("pluginVersion", pluginVersionTag.substringAfter("agent-v"))  //"0.43.1"
+  val serverVersion = Pair("serverVersion", serverVersionTag.substringAfter("v"))        //"0.49.13"
+  val clientVersion = Pair("clientVersion", projectorClientVersion)
+  val properties = mapOf(pluginVersion, serverVersion, clientVersion)
+  inputs.properties(properties)
+
+  filesMatching("version.properties") {
+    expand(properties)
+  }
+}
+
+fun String.runCommand(
+  workingDir: File = File("."),
+  timeoutAmount: Long = 60,
+  timeoutUnit: TimeUnit = TimeUnit.SECONDS,
+): String = ProcessBuilder(
+  //split("\\s(?=(?:[^'\"`]*(['\"`])[^'\"`]*\\1)*[^'\"`]*$)".toRegex())
+  split("\\s".toRegex())
+)
+  .directory(workingDir)
+  .redirectOutput(ProcessBuilder.Redirect.PIPE)
+  .redirectError(ProcessBuilder.Redirect.PIPE)
+  .start()
+  .apply { waitFor(timeoutAmount, timeoutUnit) }
+  .run {
+    val error = errorStream.bufferedReader().readText().trim()
+    if (error.isNotEmpty()) {
+      println("runCommand error $error")
+      throw Exception(error)
+    }
+    inputStream.bufferedReader().readText().trim()
+  }
